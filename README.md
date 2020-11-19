@@ -4,8 +4,12 @@ oSTEM's custom Discord bot, Lovelace. Currently in an alpha state with major rew
 ## Set-up Requirements
 This is a Python Discord bot that uses the discord.py framework.
 - Python 3.6+
-- `python -m pip install discord`
-- `python -m pip install dotenv`
+
+Run the command
+```bash
+python -m pip install -r requirements.txt
+```
+to install all of the dependencies of this project
 
 
 ## Running the bot on a test server
