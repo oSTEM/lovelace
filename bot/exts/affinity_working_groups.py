@@ -1,9 +1,7 @@
 import discord
 from discord.ext import commands
 
-from bot.bot import bot
-from bot.constants import ACTIVE_GUILD, AFFINITY_GROUPS, WORKING_GROUPS
-from bot.utils.role_checks import _has_role_check
+from constants import ACTIVE_GUILD, AFFINITY_GROUPS, WORKING_GROUPS
 
 
 class WorkingGroups(commands.Cog):
@@ -18,22 +16,17 @@ class WorkingGroups(commands.Cog):
 
         The current working groups can be found on the oSTEM.org website.
         """
-        guild = discord.utils.get(bot.guilds, name=ACTIVE_GUILD)
-        if await _has_role_check(ctx, guild, "Member"):
-            category = discord.utils.get(guild.categories, name="Working Groups")
-            await _add_remove_from_group(ctx, working_group, category, True)
-        else:
-            msg_content = """Sorry, you have not accepted the server rules yet.\
-                           \nPlease read the #welcome channel and click on the existing reaction emoji to agree to the server rules."""
-            await ctx.author.send(msg_content)
+        guild = discord.utils.get(self.bot.guilds, name=ACTIVE_GUILD)
+        category = discord.utils.get(guild.categories, name="Working Groups")
+        await _add_remove_from_group(self, ctx, working_group, category, True)
 
     @commands.command()
     async def leave_wg(self, ctx: commands.Context, *, working_group: str) -> None:
         """Direct Message the bot with the affinity group that you would like to leave.
         The bot will remove you from the group."""
-        guild = discord.utils.get(bot.guilds, name=ACTIVE_GUILD)
+        guild = discord.utils.get(self.bot.guilds, name=ACTIVE_GUILD)
         category = discord.utils.get(guild.categories, name="Working Groups")
-        await _add_remove_from_group(ctx, working_group, category, False)
+        await _add_remove_from_group(self, ctx, working_group, category, False)
 
 
 class AffinityGroups(commands.Cog):
@@ -48,26 +41,21 @@ class AffinityGroups(commands.Cog):
 
         The current affinity groups can be found on the oSTEM.org website
         """
-        guild = discord.utils.get(bot.guilds, name=ACTIVE_GUILD)
-        if await _has_role_check(ctx, guild, "Member"):
-            category = discord.utils.get(guild.categories, name="affinity groups")
-            await _add_remove_from_group(ctx, affinity_group, category, True)
-        else:
-            msg_content = """Sorry, you have not accepted the server rules yet.\
-                           \nPlease read the #welcome channel and click on the existing reaction emoji to agree to the server rules."""
-            await ctx.author.send(msg_content)
+        guild = discord.utils.get(self.bot.guilds, name=ACTIVE_GUILD)
+        category = discord.utils.get(guild.categories, name="affinity groups")
+        await _add_remove_from_group(self, ctx, affinity_group, category, True)
 
     @commands.command()
     async def leave_ag(self, ctx: commands.Context, *, affinity_group: str) -> None:
         """Direct Message the bot with the affinity group that you would like to leave.
         The bot will remove you from the group."""
 
-        guild = discord.utils.get(bot.guilds, name=ACTIVE_GUILD)
+        guild = discord.utils.get(self.bot.guilds, name=ACTIVE_GUILD)
         category = discord.utils.get(guild.categories, name="affinity groups")
-        await _add_remove_from_group(ctx, affinity_group, category, False)
+        await _add_remove_from_group(self, ctx, affinity_group, category, False)
 
 
-async def _add_remove_from_group(ctx: commands.Context, channel_name: str, category,  add: bool = True) -> bool:
+async def _add_remove_from_group(bot, ctx: commands.Context, channel_name: str, category,  add: bool = True) -> bool:
     """Helper function to add or remove a user from a specific channel.
     If add is false, it will remove the permissions."""
 

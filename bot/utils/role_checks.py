@@ -6,6 +6,6 @@ async def _has_role_check(ctx: commands.Context, guild, *role_names: str) -> boo
     member = guild.get_member(int(ctx.author.id))
 
     for role in member.roles:
-        if role.name in role_name:
+        if role.name in role_names:
             return True
     return False
