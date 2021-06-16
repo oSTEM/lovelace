@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
-
-from constants import ACTIVE_GUILD, AFFINITY_GROUPS, WORKING_GROUPS
+from dislash import slash_commands
 
 
 class WorkingGroups(commands.Cog):
@@ -10,23 +9,30 @@ class WorkingGroups(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command()
-    async def join_wg(self, ctx: commands.Context, *, working_group: str) -> None:
-        """Direct Message the bot with the affinity group they want to join. The bot will add you to the correct group.
+    @slash_commands.command(name="working-group")
+    async def affinity_group(self, interaction):
+        for k, v in interaction.data.options.items():
+            if v.name == "join":
+                add = True
+                action = "joined"
+            else:
+                add = False
+                action = "left"
+            
+            result = await _add_remove_from_group(interaction.guild, interaction.author, v.value, "working groups",  add)
 
-        The current working groups can be found on the oSTEM.org website.
-        """
-        guild = discord.utils.get(self.bot.guilds, name=ACTIVE_GUILD)
-        category = discord.utils.get(guild.categories, name="Working Groups")
-        await _add_remove_from_group(self, ctx, working_group, category, True)
-
-    @commands.command()
-    async def leave_wg(self, ctx: commands.Context, *, working_group: str) -> None:
-        """Direct Message the bot with the affinity group that you would like to leave.
-        The bot will remove you from the group."""
-        guild = discord.utils.get(self.bot.guilds, name=ACTIVE_GUILD)
-        category = discord.utils.get(guild.categories, name="Working Groups")
-        await _add_remove_from_group(self, ctx, working_group, category, False)
+            if result is True:
+                msg_content = f":white_check_mark: You have successfully {action} the {v.value} working group channel.\
+                \nIf there was an error, please contact an admin."
+            else:
+                msg_content = ":x: Sorry, there was an error. Please try again or contact an admin."
+            
+        await interaction.reply(
+            content=msg_content,
+            hide_user_input=True,
+            ephemeral=True,  # Only visible to the invoker of the command
+            type=4,  # Immediate response with acknowledge
+        )
 
 
 class AffinityGroups(commands.Cog):
@@ -35,56 +41,45 @@ class AffinityGroups(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command()
-    async def join_ag(self, ctx: commands.Context, *, affinity_group: str) -> None:
-        """Direct Message the bot with the affinity group they want to join. The bot will add you to the correct group.
+    @slash_commands.command(name="affinity-group")
+    async def affinity_group(self, interaction):
+        for k, v in interaction.data.options.items():
+            if v.name == "join":
+                add = True
+                action = "joined"
+            else:
+                add = False
+                action = "left"
+            
+            result = await _add_remove_from_group(interaction.guild, interaction.author, v.value, "affinity groups",  add)
 
-        The current affinity groups can be found on the oSTEM.org website
-        """
-        guild = discord.utils.get(self.bot.guilds, name=ACTIVE_GUILD)
-        category = discord.utils.get(guild.categories, name="affinity groups")
-        await _add_remove_from_group(self, ctx, affinity_group, category, True)
-
-    @commands.command()
-    async def leave_ag(self, ctx: commands.Context, *, affinity_group: str) -> None:
-        """Direct Message the bot with the affinity group that you would like to leave.
-        The bot will remove you from the group."""
-
-        guild = discord.utils.get(self.bot.guilds, name=ACTIVE_GUILD)
-        category = discord.utils.get(guild.categories, name="affinity groups")
-        await _add_remove_from_group(self, ctx, affinity_group, category, False)
+            if result is True:
+                msg_content = f":white_check_mark: You have successfully {action} the {v.value} affinity group channel.\
+                \nIf there was an error, please contact an admin."
+            else:
+                msg_content = ":x: Sorry, there was an error. Please try again or contact an admin."
+            
+        await interaction.reply(
+            content=msg_content,
+            hide_user_input=True,
+            ephemeral=True,  # Only visible to the invoker of the command
+            type=4,  # Immediate response with acknowledge
+        )
 
 
-async def _add_remove_from_group(bot, ctx: commands.Context, channel_name: str, category,  add: bool = True) -> bool:
+async def _add_remove_from_group(guild, user, channel_name: str, category_name: str,  add: bool) -> bool:
     """Helper function to add or remove a user from a specific channel.
     If add is false, it will remove the permissions."""
 
-    guild = discord.utils.get(bot.guilds, name=ACTIVE_GUILD)
-
-    active_group = ''
-    if category.name == "affinity groups":
-        active_group = AFFINITY_GROUPS
-    elif category.name == "Working Groups":
-        active_group = WORKING_GROUPS
-
-    msg_content = ":x: Sorry, there was an error. Please try again or contact an admin."
-
-    for key, value in active_group.items():
-        if channel_name.lower() in value:
-            channel = discord.utils.get(guild.channels, category_id=category.id, name=key)
-            await channel.set_permissions(ctx.author, read_messages=add, send_messages=add, add_reactions=add,
-                                          read_message_history=add, external_emojis=add, attach_files=add,
-                                          embed_links=add)
-            if add is True:
-                result = "added"
-            else:
-                result = "removed"
-            msg_content = f":white_check_mark: You have been successfully {result} from the {key} affinity group channel.\
-                \nIf there was an error, please contact an admin."
-    await ctx.author.send(msg_content)
-    if ctx.channel.type is discord.ChannelType.text:
-        # If the message was in a public channel, we will delete the message to maintain privacy
-        await ctx.message.delete()
+    category = discord.utils.get(guild.categories, name=category_name)
+    channel = discord.utils.get(guild.channels, category_id=category.id, name=channel_name)
+    if add is True:
+        await channel.set_permissions(user, read_messages=add, send_messages=add, add_reactions=add,
+            read_message_history=add, external_emojis=add, attach_files=add, embed_links=add)
+    else:
+        # Resets the permissions for the user and removes the channel-specific override
+        await channel.set_permissions(user, overwrite=None)
+    return True
 
 
 def setup(bot: commands.Bot) -> None:

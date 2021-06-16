@@ -1,10 +1,10 @@
 import os
 
 import discord
+from dislash import SlashClient
 from discord.ext import commands
-from dotenv import load_dotenv
 
-from constants import COMMAND_PREFIX
+from constants import COMMAND_PREFIX, LOG_CHANNEL
 
 
 class Lovelace(commands.Bot):
@@ -17,11 +17,10 @@ class Lovelace(commands.Bot):
         self.load_extension("exts.affinity_working_groups")
 
     async def on_ready(self, *args, **kwargs):
-        print(f'{bot.user} has connected to Discord')
+        await self.get_channel(LOG_CHANNEL).send("I have connected.")
 
 
 if __name__ == "__main__":
-    load_dotenv()
     TOKEN = os.getenv('TOKEN')
 
     # Intents
@@ -31,9 +30,11 @@ if __name__ == "__main__":
 
     bot = Lovelace(
         command_prefix=COMMAND_PREFIX,
-        activity=discord.Game(name=f"Commands: {COMMAND_PREFIX}help"),
+        acitivty=None,
         intents=intents,
         allowed_mentions=discord.AllowedMentions(everyone=False)
     )
+
+    slash = SlashClient(bot)
 
     bot.run(TOKEN)

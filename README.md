@@ -1,23 +1,25 @@
-# lovelace
+# Lovelace
 oSTEM's custom Discord bot, Lovelace. Happily accepting contributions!
 
-## Set-up Requirements
-This is a Python Discord bot that uses the discord.py framework.
-- Python 3.6+
+This bot uses the discord.py library for the basic bot functionality and uses dislash.py for Slash Commands support.
 
-Run the command
+The main purpose of the bot is to provide functionality for joining Affinity and Working groups securely 
+
+# Set-up Requirements
+This is a Python Discord bot that uses the discord.py and dislash.py frameworks.
+It requires python 3.6+ but it currently using what is specified in the `Dockerfile`.
+
+Additional, this bot uses Docker to run the application.
+The commands to build the docker image and to run the container are as follows:
+
 ```bash
-python -m pip install -r requirements.txt
+docker build -t lovelace .
 ```
-to install all of the dependencies of this project
 
-
-## Running the bot on a test server
-This bot is tightly coupled with how we set-up our server. 
-- The affinity and working groups require that the specific channel names tied to those dictionary constants are present.
-- You will need to update the `ACTIVE_GUILD` constant to match the test server.
-- Ensure you have a `.env` file with the token for your test bot (`TOKEN=...`) 
-- To run locally, you will need to navigate to the `lovelace` folder and then run the command:
 ```bash
-python -m bot
+docker run -e "TOKEN=token_goes_here" lovelace
 ```
+
+The `register_command.py` file is required to run once and requires an adjustment to the `Dockerfile`, specifically the file for `CMD`. This registers the Slash Commands for the specified Guild.
+
+Once the commands are registered for the guild, the bot can be re-run normally with the Docker commands listed above.
